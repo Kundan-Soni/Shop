@@ -21,7 +21,6 @@
     <input id="desc" placeholder="Description">
     <input id="weight" placeholder="Weight">
     <input id="rate" placeholder="Rate">
-    <input id="making" type="number" placeholder="Making Charges">
     <input id="total" type="number" placeholder="Total (Manual)">
     <button onclick="addItem()">Add Item</button>
 </div>
@@ -29,11 +28,10 @@
 <table>
 <thead>
 <tr>
-    <th>Description</th>
-    <th>Weight</th>
-    <th>Rate</th>
-    <th>Making</th>
-    <th>Total</th>
+<th>Description</th>
+<th>Weight</th>
+<th>Rate</th>
+<th>Total</th>
 </tr>
 </thead>
 <tbody id="billBody"></tbody>
@@ -50,10 +48,9 @@
 <br><br>
 <button class="pdfBtn" onclick="generatePDF()">Generate GST PDF</button>
 
-<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-
 <script src="script.js"></script>
+
 </body>
 </html>
