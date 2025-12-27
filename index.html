@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kundan Jewellers GST Invoice</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>GST Billing Web App</h2>
+
+<div class="form">
+    <input id="custName" placeholder="Customer Name">
+    <input id="custAddress" placeholder="Customer Address">
+    <input id="billDate" type="date">
+</div>
+
+<hr>
+
+<div class="form">
+    <input id="desc" placeholder="Description">
+    <input id="weight" placeholder="Weight">
+    <input id="rate" placeholder="Rate">
+    <input id="making" type="number" placeholder="Making Charges">
+    <input id="total" type="number" placeholder="Total (Manual)">
+    <button onclick="addItem()">Add Item</button>
+</div>
+
+<table>
+<thead>
+<tr>
+    <th>Description</th>
+    <th>Weight</th>
+    <th>Rate</th>
+    <th>Making</th>
+    <th>Total</th>
+</tr>
+</thead>
+<tbody id="billBody"></tbody>
+</table>
+
+<h3 id="grandTotal">Total : ₹0</h3>
+
+<hr>
+
+<h3>Upload Item Photos</h3>
+<input type="file" id="itemImage1" accept="image/*">
+<input type="file" id="itemImage2" accept="image/*">
+
+<br><br>
+<button class="pdfBtn" onclick="generatePDF()">Generate GST PDF</button>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+<script src="script.js"></script>
+</body>
+</html>
