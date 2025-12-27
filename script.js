@@ -4,16 +4,15 @@ let totalAmount = 0;
 let itemImage1Data = null;
 let itemImage2Data = null;
 
-/* -------- ADD ITEM (MANUAL ENTRY) -------- */
+/* ---------- ADD ITEM (MANUAL TOTAL) ---------- */
 function addItem() {
     const desc = document.getElementById("desc").value;
     const weight = document.getElementById("weight").value;
     const rate = document.getElementById("rate").value;
-    const making = Number(document.getElementById("making").value);
     const total = Number(document.getElementById("total").value);
 
-    if (!desc || !weight || !rate || isNaN(making) || total <= 0) {
-        alert("Please fill all item details");
+    if (!desc || !weight || !rate || total <= 0) {
+        alert("Please enter all item details including total");
         return;
     }
 
@@ -23,7 +22,6 @@ function addItem() {
         desc,
         weight,
         rate,
-        making.toFixed(2),
         total.toFixed(2)
     ]);
 
@@ -32,7 +30,6 @@ function addItem() {
             <td>${desc}</td>
             <td>${weight}</td>
             <td>${rate}</td>
-            <td>${making.toFixed(2)}</td>
             <td>${total.toFixed(2)}</td>
         </tr>
     `;
@@ -40,19 +37,20 @@ function addItem() {
     document.getElementById("grandTotal").innerText =
         "Total : ₹" + totalAmount.toFixed(2);
 
-    ["desc", "weight", "rate", "making", "total"].forEach(id => {
-        document.getElementById(id).value = "";
-    });
+    document.getElementById("desc").value = "";
+    document.getElementById("weight").value = "";
+    document.getElementById("rate").value = "";
+    document.getElementById("total").value = "";
 }
 
-/* -------- IMAGE UPLOAD -------- */
-function loadImage(inputId, callback) {
-    document.getElementById(inputId).addEventListener("change", e => {
+/* ---------- IMAGE UPLOAD ---------- */
+function loadImage(inputId, assignFn) {
+    document.getElementById(inputId).addEventListener("change", function (e) {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = () => callback(reader.result);
+        reader.onload = () => assignFn(reader.result);
         reader.readAsDataURL(file);
     });
 }
@@ -60,7 +58,26 @@ function loadImage(inputId, callback) {
 loadImage("itemImage1", d => itemImage1Data = d);
 loadImage("itemImage2", d => itemImage2Data = d);
 
-/* -------- GENERATE PDF -------- */
+/* ---------- NUMBER TO WORDS (INDIAN FORMAT) ---------- */
+function numberToWords(num) {
+    const a = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine",
+               "Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen",
+               "Seventeen","Eighteen","Nineteen"];
+    const b = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+
+    function convert(n) {
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n/10)] + " " + a[n%10];
+        if (n < 1000) return a[Math.floor(n/100)] + " Hundred " + convert(n%100);
+        if (n < 100000) return convert(Math.floor(n/1000)) + " Thousand " + convert(n%1000);
+        if (n < 10000000) return convert(Math.floor(n/100000)) + " Lakh " + convert(n%100000);
+        return convert(Math.floor(n/10000000)) + " Crore " + convert(n%10000000);
+    }
+
+    return convert(Math.floor(num)).trim() + " Only";
+}
+
+/* ---------- GENERATE PDF ---------- */
 function generatePDF() {
     if (items.length === 0) {
         alert("No items added");
@@ -75,7 +92,6 @@ function generatePDF() {
 
     headerImg.onload = function () {
 
-        /* HEADER IMAGE */
         doc.addImage(headerImg, "PNG", 5, 5, 200, 40);
 
         /* CUSTOMER INFO */
@@ -93,46 +109,55 @@ function generatePDF() {
             { align: "right" }
         );
 
-        /* TABLE */
+        /* TABLE WITH GRAND TOTAL ROW */
+        const tableData = [...items];
+        tableData.push(["", "", "Grand Total", totalAmount.toFixed(2)]);
+
         doc.autoTable({
             startY: 72,
-            head: [["Description", "Weight", "Rate", "Making", "Total"]],
-            body: items,
-            styles: { halign: "center", fontSize: 9 }
+            head: [["Description", "Weight", "Rate", "Total"]],
+            body: tableData,
+            styles: { halign: "center", fontSize: 9 },
+            didParseCell: function (data) {
+                if (data.row.index === tableData.length - 1) {
+                    data.cell.styles.fontStyle = "bold";
+                }
+            }
         });
 
-        let y = doc.lastAutoTable.finalY + 10;
+        let currentY = doc.lastAutoTable.finalY + 10;
 
         /* ITEM PHOTOS */
         if (itemImage1Data || itemImage2Data) {
-            doc.text("Item Photos:", 14, y);
-            y += 5;
+            doc.setFontSize(10);
+            doc.text("Item Photos:", 14, currentY);
+            currentY += 5;
 
             if (itemImage1Data)
-                doc.addImage(itemImage1Data, "JPEG", 14, y, 80, 60);
+                doc.addImage(itemImage1Data, "JPEG", 14, currentY, 80, 60);
 
             if (itemImage2Data)
-                doc.addImage(itemImage2Data, "JPEG", 110, y, 80, 60);
+                doc.addImage(itemImage2Data, "JPEG", 110, currentY, 80, 60);
 
-            y += 65;
+            currentY += 65;
         }
 
-        /* GRAND TOTAL */
+        /* TOTAL IN WORDS */
+        doc.setFontSize(10);
         doc.text(
-            "Total : ₹" + totalAmount.toFixed(2),
-            200,
-            y,
-            { align: "right" }
+            "Total Amount (in words): " + numberToWords(totalAmount),
+            14,
+            currentY
         );
 
         /* TERMS */
-        y += 15;
+        currentY += 15;
         doc.setFontSize(9);
-        doc.text("Terms & Conditions:", 14, y);
-        doc.text("Goods once sold will not be taken back.", 14, y + 6);
-        doc.text("Subject to Glittering City jurisdiction.", 14, y + 12);
-        doc.text("Thank you for shopping with us!", 14, y + 22);
-        doc.text("Visit us again.", 14, y + 28);
+        doc.text("Terms & Conditions:", 14, currentY);
+        doc.text("Goods once sold will not be taken back.", 14, currentY + 6);
+        doc.text("Subject to Glittering City jurisdiction.", 14, currentY + 12);
+        doc.text("Thank you for shopping with us!", 14, currentY + 22);
+        doc.text("Visit us again.", 14, currentY + 28);
 
         doc.save("GST_Invoice_Kundan_Jewellers.pdf");
     };
